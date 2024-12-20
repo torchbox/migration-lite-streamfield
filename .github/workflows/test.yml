@@ -1,0 +1,187 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+      - "stable/**"
+
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: "1"
+  TOX_TESTENV_PASSENV: FORCE_COLOR
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_PYTHON_VERSION_WARNING: "1"
+  PYTHON_LATEST: "3.11"
+  PIP_CACHE_DIR: ${{ github.workspace }}/.pip-cache
+
+jobs:
+  test-sqlite:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+        django: ["5.1"]
+        wagtail: ["6.2", "6.3"]
+        db: ["sqlite"]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            pyproject.toml
+            tox.ini
+
+      - name: 📦 Install dependencies
+        run: |
+          python -Im pip install --upgrade pip flit tox tox-gh-actions || (echo "::error::Failed to install dependencies" && exit 1)
+
+      - name: 💾 Cache tox environments
+        uses: actions/cache@v4
+        with:
+          path: .tox
+          key: tox-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.django }}-${{ matrix.wagtail }}-${{ hashFiles('tox.ini') }}
+
+      - name: 🏗️ Build wheel
+        run: python -Im flit build --format wheel || (echo "::error::Failed to build wheel" && exit 1)
+
+      - name: 🧪 Run tests
+        env:
+          TOXENV: py${{ matrix.python-version }}-django${{ matrix.django }}-wagtail${{ matrix.wagtail }}-sqlite
+        run: |
+          tox --installpkg ./dist/*.whl || (echo "::error::Tests failed" && exit 1)
+
+      - name: ⬆️ Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-${{ matrix.python-version }}-${{ matrix.django }}-${{ matrix.wagtail }}-sqlite
+          path: .coverage*
+          if-no-files-found: error
+          include-hidden-files: true
+
+  test-postgres:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12"]
+        django: ["5.1"]
+        wagtail: ["6.2", "6.3"]
+        db: ["postgres"]
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            pyproject.toml
+            tox.ini
+
+      - name: 📦 Install dependencies
+        run: |
+          python -Im pip install --upgrade pip flit tox tox-gh-actions || (echo "::error::Failed to install dependencies" && exit 1)
+
+      - name: 💾 Cache tox environments
+        uses: actions/cache@v4
+        with:
+          path: .tox
+          key: tox-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.django }}-${{ matrix.wagtail }}-postgres-${{ hashFiles('tox.ini') }}
+
+      - name: 🏗️ Build wheel
+        run: python -Im flit build --format wheel || (echo "::error::Failed to build wheel" && exit 1)
+
+      - name: 🧪 Run tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/wagtail_wheelhouse_git
+        run: |
+          tox --installpkg ./dist/*.whl || (echo "::error::Tests failed" && exit 1)
+
+      - name: ⬆️ Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-${{ matrix.python-version }}-${{ matrix.django }}-${{ matrix.wagtail }}-postgres
+          path: .coverage*
+          if-no-files-found: error
+          include-hidden-files: true
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs:
+      - test-sqlite
+      - test-postgres
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_LATEST}}
+          cache: 'pip'
+
+      - name: 📦 Install coverage
+        run: python -Im pip install --upgrade coverage
+
+      - name: ⬇️ Download coverage data
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-data-*
+          merge-multiple: false
+          path: coverage-data
+
+      - name: 🔄 Combine coverage
+        run: |
+          set -e
+          mkdir -p combined_coverage
+          find coverage-data -type f -name '.coverage*' -exec cp {} combined_coverage/ \;
+          cd combined_coverage
+          python -Im coverage combine
+          python -Im coverage html --skip-covered --skip-empty
+          python -Im coverage report
+          echo "## Coverage summary" >> $GITHUB_STEP_SUMMARY
+          python -Im coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+
+      - name: ✅ Check minimum coverage
+        run: |
+          cd combined_coverage
+          python -Im coverage report --fail-under=80
+
+      - name: 📈 Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report
+          path: combined_coverage/htmlcov
+          if-no-files-found: error
+          include-hidden-files: true

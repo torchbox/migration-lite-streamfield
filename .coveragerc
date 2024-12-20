@@ -2,7 +2,7 @@
 branch = True
 concurrency = multiprocessing, thread
 parallel = True
-source_pkgs = reusable
+source_pkgs = mlstreamfield
 omit = **/migrations/*,tests/*
 
 [paths]

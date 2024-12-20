@@ -19,12 +19,12 @@ extend-select = [
 ]
 
 extend-ignore = [
-    "E501",  # no line lenght errors
+    "E501",  # no line length errors
 ]
 fixable = ["C4", "E", "F", "I", "UP"]
 
 [lint.isort]
-known-first-party = ["src", "mlstreamfield"]
+known-first-party = ["mlstreamfield"]
 lines-between-types = 1
 lines-after-imports = 2
 
