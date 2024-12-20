@@ -1,0 +1,70 @@
+[project]
+name = "migration-lite-streamfield"
+description = ""
+authors = [{name = "Andy Babic ", email = "andy.babic@torchbox.com"}]
+maintainers = [
+    {name = "Andy Babic", email = "andy.babic@torchbox.com"},
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["Django", "Wagtail", "StreamField", "migration", "lite"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Django",
+    "Framework :: Django :: 5.1",
+    "Framework :: Wagtail",
+    "Framework :: Wagtail :: 6",
+]
+
+dynamic = ["version"]
+requires-python = ">=3.11"
+dependencies = [
+    "Django>=5.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "Wagtail>=5.2",
+    "dj-database-url>=2.1.0,<3.0",
+    "coverage>=7.0,<8.0",
+]
+type-checking = [
+    "mypy>=1.9.0,<2.0",
+    "django-stubs>=4.2.7,<5.0",
+    "django-stubs-ext>=4.2.7,<5.0",
+    "types-setuptools>=69.0.0,<70.0",
+]
+
+[project.urls]
+Source = "https://github.com/torchbox/migration-lite-streamfield"
+Changelog = "https://github.com/torchbox/migration-lite-streamfield/blob/main/CHANGELOG.md"
+
+
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "mlstreamfield"
+
+[tool.flit.sdist]
+exclude = [
+    ".*",
+    "*.db",
+    "*.json",
+    "*.ini",
+    "*.sqlite3",
+    "*.yaml",
+    "tests",
+    "CHANGELOG.md",
+    "ruff.toml",
+    "manage.py",
+    "testmanage.py",
+]
