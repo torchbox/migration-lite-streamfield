@@ -25,14 +25,65 @@ env:
   PIP_CACHE_DIR: ${{ github.workspace }}/.pip-cache
 
 jobs:
+  test-wagtail-5:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+        django: ["4.2"]
+        wagtail: ["5.2"]
+        db: ["sqlite", "postgres"]
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            pyproject.toml
+            tox.ini
+
+      - name: 📦 Install dependencies
+        run: |
+          python -Im pip install --upgrade pip flit tox tox-gh-actions || (echo "::error::Failed to install dependencies" && exit 1)
+
+      - name: 💾 Cache tox environments
+        uses: actions/cache@v4
+        with:
+          path: .tox
+          key: tox-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.django }}-${{ matrix.wagtail }}-${{ hashFiles('tox.ini') }}
+
+      - name: 🏗️ Build wheel
+        run: python -Im flit build --format wheel || (echo "::error::Failed to build wheel" && exit 1)
+
+      - name: 🧪 Run tests
+        env:
+          TOXENV: py${{ matrix.python-version }}-django${{ matrix.django }}-wagtail${{ matrix.wagtail }}-sqlite
+        run: |
+          tox --installpkg ./dist/*.whl || (echo "::error::Tests failed" && exit 1)
+
   test-sqlite:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
-        django: ["5.1"]
-        wagtail: ["6.2", "6.3"]
+        python-version: ["3.11"]
+        django: ["5.0", "5.1"]
+        wagtail: ["6.0", "6.1", "6.2", "6.3"]
         db: ["sqlite"]
 
     steps:
@@ -81,8 +132,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12"]
-        django: ["5.1"]
-        wagtail: ["6.2", "6.3"]
+        django: ["5.0", "5.1"]
+        wagtail: ["6.0", "6.2", "6.3"]
         db: ["postgres"]
 
     services:
