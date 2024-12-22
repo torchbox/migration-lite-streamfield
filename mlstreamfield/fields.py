@@ -1,7 +1,6 @@
 import json
 
 from wagtail import __version__ as wagtail_version
-from wagtail.blocks.stream_block import StreamValue
 from wagtail.fields import StreamField as WagtailStreamfield
 
 
@@ -44,15 +43,11 @@ class StreamField(WagtailStreamfield):
         causing self.stream_block.to_python() to not recognise any of the
         blocks in the stored value.
         """
-        if self.stream_block.child_blocks:
-            return super().to_python(value)
-
-
-        stream_value = StreamValue(self.stream_block, [], [])
+        stream_value = super().to_python(value)
 
         # There is no way to be absolutely sure this is a migration,
         # but the combination of factors below is a pretty decent indicator
-        if value and not stream_value._raw_data:
+        if value and not self.stream_block.child_blocks:
             if isinstance(value, list):
                 stream_value._raw_data = value
             elif isinstance(value, str):
@@ -60,7 +55,6 @@ class StreamField(WagtailStreamfield):
                     stream_value._raw_data = json.loads(value)
                 except ValueError:
                     stream_value.raw_text = value
-            return stream_value
 
         return stream_value
 
@@ -70,9 +64,10 @@ class StreamField(WagtailStreamfield):
         block definitions are unavailable during migrations, which causes
         empty values to be written back to the database on save.
         """
-        if wagtail_version > "6.0" and not self.stream_block.child_blocks and isinstance(value, StreamValue):
+        if not self.stream_block.child_blocks:
             if value.raw_text:
                 return value.raw_text
             if value._raw_data:
                 return json.dumps(value._raw_data)
+
         return super().get_prep_value(value)
