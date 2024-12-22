@@ -18,11 +18,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="testpage",
             name="body",
-            field=mlstreamfield.fields.StreamField(blank=True, block_lookup={}),
+            field=mlstreamfield.fields.StreamField(blank=True),
         ),
         migrations.AlterField(
             model_name="testsnippet",
             name="body",
-            field=mlstreamfield.fields.StreamField(blank=True, block_lookup={}),
+            field=mlstreamfield.fields.StreamField(blank=True),
         ),
     ]
