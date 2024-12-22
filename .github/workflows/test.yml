@@ -76,6 +76,14 @@ jobs:
         run: |
           tox --installpkg ./dist/*.whl || (echo "::error::Tests failed" && exit 1)
 
+      - name: ⬆️ Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-${{ matrix.python-version }}-${{ matrix.django }}-${{ matrix.wagtail }}-${{ matrix.db }}
+          path: .coverage*
+          if-no-files-found: error
+          include-hidden-files: true
+
   test-sqlite:
     runs-on: ubuntu-latest
     strategy:

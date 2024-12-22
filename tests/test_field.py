@@ -127,3 +127,35 @@ class TestStreamField(TestCase):
         # Should return None
         result = self.field.get_prep_value(None)
         self.assertIsNone(result)
+
+    def test_deconstruct_removes_block_lookup(self):
+        # Test that block_lookup is removed during deconstruction
+        field = StreamField(self.block_types)
+        field.block_lookup = {"some": "value"}  # Add block_lookup
+        name, path, args, kwargs = field.deconstruct()
+        self.assertNotIn("block_lookup", kwargs)
+
+    def test_to_python_with_raw_text_and_child_blocks(self):
+        # Test that raw_text is properly handled when child_blocks exist
+        field = StreamField(self.block_types)  # Field with child blocks
+        value = "some raw text"
+        result = field.to_python(value)
+        self.assertIsInstance(result, StreamValue)
+        self.assertEqual(len(result), 0)  # Should be empty as text isn't valid JSON
+
+    def test_deconstruct_with_block_types_in_kwargs(self):
+        # Test deconstruct when block_types is in kwargs but no args
+        field = StreamField()
+        field.block_types = self.block_types  # Add block_types to kwargs
+        name, path, args, kwargs = field.deconstruct()
+        self.assertNotIn("block_types", kwargs)
+
+    def test_to_python_with_child_blocks(self):
+        # Test that to_python uses the parent class implementation when child_blocks exist
+        field = StreamField(self.block_types)  # Field with child blocks
+        value = [{"type": "text", "value": "test"}]
+        result = field.to_python(value)
+        # Verify the value was processed by the parent class
+        self.assertIsInstance(result, StreamValue)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].value, "test")
