@@ -66,7 +66,7 @@ class StreamField(WagtailStreamfield):
         block definitions are unavailable during migrations, which causes
         empty values to be written back to the database on save.
         """
-        if not self.stream_block.child_blocks and isinstance(value, StreamValue):
+        if wagtail_version > "6.0" and not self.stream_block.child_blocks and isinstance(value, StreamValue):
             if value.raw_text:
                 return value.raw_text
             if value._raw_data:
