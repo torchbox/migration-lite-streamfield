@@ -61,12 +61,6 @@ jobs:
         run: |
           python -Im pip install --upgrade pip flit tox tox-gh-actions || (echo "::error::Failed to install dependencies" && exit 1)
 
-      - name: 💾 Cache tox environments
-        uses: actions/cache@v4
-        with:
-          path: .tox
-          key: tox-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.django }}-${{ matrix.wagtail }}-${{ hashFiles('tox.ini') }}
-
       - name: 🏗️ Build wheel
         run: python -Im flit build --format wheel || (echo "::error::Failed to build wheel" && exit 1)
 
