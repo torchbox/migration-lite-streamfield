@@ -29,6 +29,7 @@ class StreamField(WagtailStreamfield):
             args = args[1:]
         else:
             kwargs.pop("block_types", None)
+        kwargs.pop("block_lookup", None)
         kwargs.pop("verbose_name", None)
         return name, path, args, kwargs
 
