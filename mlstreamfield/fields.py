@@ -44,11 +44,15 @@ class StreamField(WagtailStreamfield):
         causing self.stream_block.to_python() to not recognise any of the
         blocks in the stored value.
         """
-        stream_value = super().to_python(value)
+        if self.stream_block.child_blocks:
+            return super().to_python(value)
+
+
+        stream_value = StreamValue(self.stream_block, [], [])
 
         # There is no way to be absolutely sure this is a migration,
         # but the combination of factors below is a pretty decent indicator
-        if value and not self.stream_block.child_blocks and not stream_value._raw_data:
+        if value and not stream_value._raw_data:
             if isinstance(value, list):
                 stream_value._raw_data = value
             elif isinstance(value, str):
