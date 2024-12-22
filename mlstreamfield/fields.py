@@ -1,5 +1,6 @@
 import json
 
+from wagtail import __version__ as wagtail_version
 from wagtail.blocks.stream_block import StreamValue
 from wagtail.fields import StreamField as WagtailStreamfield
 
@@ -16,6 +17,8 @@ class StreamField(WagtailStreamfield):
             args = args[1:]
         else:
             block_types = kwargs.pop("block_types", [])
+        if wagtail_version < "6.0" and "use_json_field" not in kwargs:
+            kwargs["use_json_field"] = True
         super().__init__(block_types, *args, **kwargs)
 
     def deconstruct(self):
