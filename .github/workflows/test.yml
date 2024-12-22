@@ -72,7 +72,7 @@ jobs:
 
       - name: 🧪 Run tests
         env:
-          TOXENV: py${{ matrix.python-version }}-django${{ matrix.django }}-wagtail${{ matrix.wagtail }}-sqlite
+          TOXENV: py${{ matrix.python-version }}-django${{ matrix.django }}-wagtail${{ matrix.wagtail }}-${{ matrix.db }}
         run: |
           tox --installpkg ./dist/*.whl || (echo "::error::Tests failed" && exit 1)
 
@@ -174,6 +174,7 @@ jobs:
       - name: 🧪 Run tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/wagtail_wheelhouse_git
+          TOXENV: py${{ matrix.python-version }}-django${{ matrix.django }}-wagtail${{ matrix.wagtail }}-postgres
         run: |
           tox --installpkg ./dist/*.whl || (echo "::error::Tests failed" && exit 1)
 
