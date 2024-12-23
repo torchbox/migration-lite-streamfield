@@ -1,6 +1,6 @@
 [project]
 name = "migration-lite-streamfield"
-description = ""
+description = "All the goodness of Wagtail's StreamField, but without the migration headaches!"
 authors = [{name = "Andy Babic ", email = "andy.babic@torchbox.com"}]
 maintainers = [
     {name = "Andy Babic", email = "andy.babic@torchbox.com"},
@@ -9,9 +9,9 @@ readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["Django", "Wagtail", "StreamField", "migration", "lite"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: BSD License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
