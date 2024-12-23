@@ -66,5 +66,4 @@ exclude = [
     "CHANGELOG.md",
     "ruff.toml",
     "manage.py",
-    "testmanage.py",
 ]
