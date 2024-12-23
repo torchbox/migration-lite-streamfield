@@ -1,5 +1,6 @@
+
 from django.test import TestCase
-from testapp.constants import ORIGINAL_BODY_VALUE, MODIFIED_BODY_VALUE
+from testapp.constants import DATE_BLOCK_ID, INTEGER_BLOCK_ID, TEXT_BLOCK_ID
 from testapp.models import TestPage, TestSnippet
 
 
@@ -11,6 +12,44 @@ class TestMigrationOutcomes(TestCase):
         for i, snippet in enumerate(TestSnippet.objects.all().order_by("id"), start=1):
             setattr(cls, f"snippet_{i}", snippet)
 
+    def assertHasOriginalBodyContent(self, body_value):
+        data = body_value.raw_data
+        self.assertEqual(len(data), 3)
+        self.assertDictEqual(
+            data[0], {"type": "text", "value": "Hello World!", "id": TEXT_BLOCK_ID}
+        )
+        self.assertDictEqual(
+            data[1], {"type": "integer", "value": "123", "id": INTEGER_BLOCK_ID}
+        )
+        self.assertDictEqual(
+            data[2],
+            {"type": "date", "value": "2024-12-25", "id": DATE_BLOCK_ID},
+        )
+        rendered_body = str(body_value)
+        self.assertInHTML('<div class="block-text">Hello World!</div>', rendered_body)
+        self.assertInHTML('<div class="block-integer">123</div>', rendered_body)
+        self.assertInHTML('<div class="block-date">2024-12-25</div>', rendered_body)
+
+    def assertHasModifiedBodyContent(self, body_value):
+        data = body_value.raw_data
+        self.assertEqual(len(data), 3)
+        self.assertDictEqual(
+            data[0], {"type": "text", "value": "Goodbye Galaxy!", "id": TEXT_BLOCK_ID}
+        )
+        self.assertDictEqual(
+            data[1], {"type": "integer", "value": "321", "id": INTEGER_BLOCK_ID}
+        )
+        self.assertDictEqual(
+            data[2],
+            {"type": "date", "value": "3024-12-25", "id": DATE_BLOCK_ID},
+        )
+        rendered_body = str(body_value)
+        self.assertInHTML(
+            '<div class="block-text">Goodbye Galaxy!</div>', rendered_body
+        )
+        self.assertInHTML('<div class="block-integer">321</div>', rendered_body)
+        self.assertInHTML('<div class="block-date">3024-12-25</div>', rendered_body)
+
     def test_original_pages_and_snippets_have_retained_their_original_body_values(self):
         """
         Test the objects created in `0002_create_test_objects` and DID NOT have their `body` value
@@ -20,19 +59,13 @@ class TestMigrationOutcomes(TestCase):
         - Updating their title in `0007_modify_title_values` and resaving
         - Updating their title in `0008_modify_title_values_with_bulk_update` via a bulk update
         """
-        self.assertEqual(self.page_1.title, "Modified Test Page")
-        self.assertEqual(len(self.page_1.body.raw_data), 3)
-        for i, block in enumerate(self.page_1.body.raw_data):
-            compare_to = ORIGINAL_BODY_VALUE[i]
-            self.assertEqual(block["type"], compare_to["type"])
-            self.assertEqual(block["value"], compare_to["value"])
-
-        self.assertEqual(self.snippet_1.title, "Modified Test Snippet")
-        self.assertEqual(len(self.snippet_1.body.raw_data), 3)
-        for i, block in enumerate(self.snippet_1.body.raw_data):
-            compare_to = ORIGINAL_BODY_VALUE[i]
-            self.assertEqual(block["type"], compare_to["type"])
-            self.assertEqual(block["value"], compare_to["value"])
+        for obj, expected_title in [
+            (self.page_1, "Modified Test Page"),
+            (self.snippet_1, "Modified Test Snippet"),
+        ]:
+            with self.subTest(repr(obj)):
+                self.assertEqual(obj.title, expected_title)
+                self.assertHasOriginalBodyContent(obj.body)
 
     def test_modified_original_pages_and_snippets_have_retained_their_modified_body_values(
         self,
@@ -43,22 +76,13 @@ class TestMigrationOutcomes(TestCase):
 
         - Updating their `title` value in `0007_modify_title_values` and resaving
         """
-        test_page = self.page_2
-        test_snippet = self.snippet_2
-
-        self.assertEqual(test_page.title, "Modified Test Page Deux")
-        self.assertEqual(len(test_page.body.raw_data), 3)
-        for i, block in enumerate(test_page.body.raw_data):
-            compare_to = MODIFIED_BODY_VALUE[i]
-            self.assertEqual(block["type"], compare_to["type"])
-            self.assertEqual(block["value"], compare_to["value"])
-
-        self.assertEqual(test_snippet.title, "Modified Test Snippet Deux")
-        self.assertEqual(len(test_snippet.body.raw_data), 3)
-        for i, block in enumerate(test_snippet.body.raw_data):
-            compare_to = MODIFIED_BODY_VALUE[i]
-            self.assertEqual(block["type"], compare_to["type"])
-            self.assertEqual(block["value"], compare_to["value"])
+        for obj, expected_title in [
+            (self.page_2, "Modified Test Page Deux"),
+            (self.snippet_2, "Modified Test Snippet Deux"),
+        ]:
+            with self.subTest(repr(obj)):
+                self.assertEqual(obj.title, expected_title)
+                self.assertHasModifiedBodyContent(obj.body)
 
     def test_newer_pages_and_snippets_have_retained_their_original_body_values(self):
         """
@@ -68,21 +92,13 @@ class TestMigrationOutcomes(TestCase):
         - Updating their `title` value in `0007_modify_title_values` and resaving
         - Updating their `title` value again in `0008_modify_title_values_with_bulk_update` via a bulk update
         """
-        test_page = self.page_3
-        test_snippet = self.snippet_3
-
-        self.assertEqual(test_page.title, "Bulk Modified Test Page Tres")
-        self.assertEqual(len(test_page.body.raw_data), 3)
-        for i, block in enumerate(test_page.body.raw_data):
-            compare_to = ORIGINAL_BODY_VALUE[i]
-            self.assertEqual(block["type"], compare_to["type"])
-            self.assertEqual(block["value"], compare_to["value"])
-
-        self.assertEqual(test_snippet.title, "Bulk Modified Test Snippet Tres")
-        for i, block in enumerate(test_snippet.body.raw_data):
-            compare_to = ORIGINAL_BODY_VALUE[i]
-            self.assertEqual(block["type"], compare_to["type"])
-            self.assertEqual(block["value"], compare_to["value"])
+        for obj, expected_title in [
+            (self.page_3, "Bulk Modified Test Page Tres"),
+            (self.snippet_3, "Bulk Modified Test Snippet Tres"),
+        ]:
+            with self.subTest(repr(obj)):
+                self.assertEqual(obj.title, expected_title)
+                self.assertHasOriginalBodyContent(obj.body)
 
     def test_modified_newer_pages_and_snippets_have_retained_their_modified_body_values(
         self,
@@ -95,19 +111,10 @@ class TestMigrationOutcomes(TestCase):
         - Updating their `title` value in `0007_modify_title_values` and resaving
         - Updating their `title` value again in `0008_modify_title_values_with_bulk_update` via a bulk update
         """
-        test_page = self.page_4
-        test_snippet = self.snippet_4
-
-        self.assertEqual(test_page.title, "Bulk Modified Test Page Cuatro")
-        self.assertEqual(len(test_page.body.raw_data), 3)
-        for i, block in enumerate(test_page.body.raw_data):
-            compare_to = MODIFIED_BODY_VALUE[i]
-            self.assertEqual(block["type"], compare_to["type"])
-            self.assertEqual(block["value"], compare_to["value"])
-
-        self.assertEqual(test_snippet.title, "Bulk Modified Test Snippet Cuatro")
-        self.assertEqual(len(test_snippet.body.raw_data), 3)
-        for i, block in enumerate(test_snippet.body.raw_data):
-            compare_to = MODIFIED_BODY_VALUE[i]
-            self.assertEqual(block["type"], compare_to["type"])
-            self.assertEqual(block["value"], compare_to["value"])
+        for obj, expected_title in [
+            (self.page_4, "Bulk Modified Test Page Cuatro"),
+            (self.snippet_4, "Bulk Modified Test Snippet Cuatro"),
+        ]:
+            with self.subTest(repr(obj)):
+                self.assertEqual(obj.title, expected_title)
+                self.assertHasModifiedBodyContent(obj.body)
