@@ -8,7 +8,7 @@ All the goodness of Wagtail's Streamfield, but without the migration headaches.
 
 Wagtail's `StreamField` is flexible and powerful, but that flexibility often comes at a price in client projects.
 
-The native implementation has included information about the blocks in a StreamField in migrations pretty much from the beignning. Personally speaking, it's a decision I've come to respect. It makes sense from a 'framework' perspective, because you never truly know how your code is being used, or what developers might need to do within a data migration. However, there's no denying it adds a degree of overhead to most client projects:
+The native implementation has included information about the blocks in a StreamField in migrations pretty much from the beginning. Personally speaking, it's a decision I've come to respect. It makes sense from a 'framework' perspective, because you never truly know how your code is being used, or what developers might need to do within a data migration. However, there's no denying it adds a degree of overhead to most client projects:
 
 - Each time you add a new block, you must generate a migration for any model you decide to add it to.
 - Each time you change the definition of an existing block, you must generate a migration for any model that uses it.
@@ -19,13 +19,13 @@ _Notice the pattern?_
 
 You might not have realised, but all of these additional migrations slow a project down. Django evaluates a project's migration history regularly when running a number of key commands, including `makemigrations`, `migrate`, `runserver`, `test`, and whenever you run a custom management command. The more migrations you have, and the larger those migrations are, the longer that evaluation takes.
 
-Whilst Wagtail has done some amazing work in recent versions to reduce the size of StreamFieldmigrations, the sheer number of migrations generated as part of the day-to-day development on a busy project can still be problematic. In addition to the aformentioned slow-down, there's also:
+Whilst Wagtail has done some amazing work in recent versions to reduce the size of StreamField migrations, the sheer number of migrations generated as part of the day-to-day development on a busy project can still be problematic. In addition to the aformentioned slow-down, there's also:
 
 - The additional noise in code contributions
 - The higher likelihood of merge conflicts when multiple developers are working on common blocks at the same time.
 - The cumulative overhead of having to apply and reverse migrations when switching between multiple feature branches your are working on (or reviewing).
 
-Let's also not forget those regretable 'environment-specific' merge migrations that are sometimes required to bring environments back to life when features are merged to an environment-specific branch in a different order to trunk (eek!).
+Let's also not forget those regrettable 'environment-specific' merge migrations that are sometimes required to bring environments back to life when features are merged to an environment-specific branch in a different order to trunk (eek!).
 
 ## How is `mlstreamfield` different?
 
@@ -37,7 +37,7 @@ It's strength comes simply from _not including block definitions (or references 
 
 Direct - I like it! Let me sum it up for you very clearly:
 
-#### 1.  You'll only be able to interact with raw data values in data migrations (accessed via `fieldname.raw_data`).
+#### 1. You'll only be able to interact with raw data values in data migrations (accessed via `fieldname.raw_data`).
 
 If, like me, you've written a lot of data migrations over the years, this is probably all you're interested in anyway! However, for those worried about the implications, the basic rundown is:
 
@@ -49,11 +49,11 @@ If, like me, you've written a lot of data migrations over the years, this is pro
 
 The values are still accessible, and modifiable: You might just need to convert the odd ID into an object yourself, or use `datetime.date.fromisoformat()` to convert a date string into a date here and there.
 
-Changes made directly to `fieldname.raw_data` are reflected when the object is saved, so it's honestly the easiest way to interact with field values in migrations anyway (regardless of whether you want to use this package or not).
+Changes made directly to `fieldname.raw_data` are reflected when the object is saved, so it's honestly the easiest way to interact with field values in data migrations anyway (regardless of whether you use this package or not).
 
-This is barely worth mentioning, but lack of access to block definitions also means you won't be able to 'render' `StreamField` values in a data migration. However, that would be a very strange thing to need in data migration anyway.
+This is barely worth mentioning, but lack of access to block definitions in migrations also means you won't be able to 'render' `StreamField` values. But, that would be a strange thing to do in a data migration anyway.
 
-#### 2. Some of the special 'migration operations' for StreamFields might not work as expectedafter switching
+#### 2. Some of the special 'migration operations' for StreamFields might not work as expected after switching
 
 Some of the built-in migration operations mentioned in [the Wagtail documentation](https://docs.wagtail.org/en/stable/advanced_topics/streamfield_migrations.html#why-are-data-migrations-necessary), or in packages like [wagtail-streamfield-migration-toolkit](https://github.com/wagtail/wagtail-streamfield-migration-toolkit) might not work as expected.
 
@@ -63,11 +63,13 @@ Honestly though, once you get a handle on the few common data structures encount
 
 Although the entirety of the package is a single Python class in a single module, it's still an additional thing to consider when keeping your Wagtail version up-to-date.
 
-That said, because of the tiny scope of the package, and the stability of the `StreamField` API (remember, field classes are regularly referenced by historic migrations,s), it's unlikely that a lot of changes will be needed to keep things compatible with the latest Wagtail version.
+That said, because of the tiny scope of the package, and the stability of the `StreamField` API (remember, field classes are regularly referenced by historic migrations - they can't just make dramatic API changes), it's unlikely that a lot of changes will be needed to keep things compatible with the latest Wagtail version.
 
-At Torchbox, we've been using a version of this field in client projects for a few years, and only had to change anything for the Wagtail 6.2 release (most ).
+At Torchbox, we've been using a version of this field in client projects for a few years, and the changes needed to keep up-to-date with Wagtail have been minimal
 
-4.  **That's it!**
+#### 4. **That's it!**
+
+Seriously. Everything else works exactly like the native `StreamField`.
 
 ### Q: Will I lose existing field data when switching to `mlstreamfield`?
 
@@ -83,9 +85,9 @@ Historic migrations will continue to use Wagtail's native `StreamField` for all 
 
 **No**. You can still access and modify field data in data migrations. You just need to use `fieldname.raw_data` to access it. If you want to see some examples, take a look at the [testapp migrations](https://github.com/torchbox/migration-lite-streamfield/tree/main/tests/testapp/migrations) for this package.
 
-### Q: Will switching to `mlstreamfield` shrink my existing migration files?
+### Q: Will switching to `mlstreamfield` solve my project's existing speed issues?
 
-**No**. Your historic migrations are completely unaffected. Switching to `mlstreamfield` will prevent things getting any worse, but it can't solve historic migrationproblems. That can only really be acheived through [migration squashing](https://medium.com/@SmoQ/django-squashing-database-migrations-4906e4beeb66).
+**No**. Your historic migrations are completely unaffected. Switching to `mlstreamfield` will prevent things getting any worse, but it can't solve historic migration problems. That can only be achieved through [migration squashing](https://medium.com/@SmoQ/django-squashing-database-migrations-4906e4beeb66), which you'll need to manage yourself.
 
 The _earlier_ in a project you adopt `mlstreamfield`, the more you'll profit.
 
@@ -93,13 +95,15 @@ The _earlier_ in a project you adopt `mlstreamfield`, the more you'll profit.
 
 Technically, _yes_. But, the recommendation is to avoid it.
 
-An add-on package doesn't usually suffer from the same issues as a client project (rapid development with multiple developers, experimental POCs, direction changes etc), so you're less likely to benefit from it.
+An add-on package doesn't usually suffer from the same issues as a client project (rapid development with multiple developers, experimental POCs, direction changes etc), so are less likely to benefit from the switch.
 
-Also, users of your package could feel blindsided by the change in migration behaviour if they've haven't adopted `mlstreamfield` themselves, and aren't familiar with the nuances.
+Also, users of your package could be blindsided by the change in migration behaviour if they haven't adopted `mlstreamfield` themselves, and aren't familiar with the nuances.
 
 ### Q: Will I lose field data if I write a bad data migration?
 
-**Yes**. But, that's true whether you decied to use `mlstreamfield` or not. Data migrations are notoriously tricky territory and require careful testing locally before committing. Nothing about `mlstreamfield` changes that.
+**Yes**. But, that's true whether you decide to use `mlstreamfield` or not.
+
+If anything, you're a little **less** likely to lose data unexpectedly in migrations, because `mlstreamfield.StreamField` allows you to access the FULL raw data of the field, regardless of current block definitions. The native version automatically sanitises raw data to only include block values that match known block types.
 
 ## Requirements
 
@@ -118,7 +122,17 @@ pip install migration-lite-streamfield
 Or add to your project's requirements:
 
 ```
-migration-lite-streamfield==1.0.0
+migration-lite-streamfield>=1.0,<1.1
+```
+
+Then, include the package in your project's `INSTALLED_APPS` setting:
+
+```python
+INSTALLED_APPS = [
+    ...
+    'mlstreamfield',
+    ...
+]
 ```
 
 ## Usage
@@ -152,5 +166,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Credits
 
+Authored by: [@ababic](https://github.com/ababic)
 Developed and maintained by [Torchbox](https://torchbox.com/).
-```
