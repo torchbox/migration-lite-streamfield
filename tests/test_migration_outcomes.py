@@ -1,5 +1,5 @@
 from django.test import TestCase
-from testapp.constants import COMPLEX_MODIFIED_BODY_VALUE, COMPLEX_ORIGINAL_BODY_VALUE
+from testapp.constants import ORIGINAL_BODY_VALUE, MODIFIED_BODY_VALUE
 from testapp.models import TestPage, TestSnippet
 
 
@@ -21,14 +21,16 @@ class TestMigrationOutcomes(TestCase):
         - Updating their title in `0008_modify_title_values_with_bulk_update` via a bulk update
         """
         self.assertEqual(self.page_1.title, "Modified Test Page")
+        self.assertEqual(len(self.page_1.body.raw_data), 3)
         for i, block in enumerate(self.page_1.body.raw_data):
-            compare_to = COMPLEX_ORIGINAL_BODY_VALUE[i]
+            compare_to = ORIGINAL_BODY_VALUE[i]
             self.assertEqual(block["type"], compare_to["type"])
             self.assertEqual(block["value"], compare_to["value"])
 
         self.assertEqual(self.snippet_1.title, "Modified Test Snippet")
+        self.assertEqual(len(self.snippet_1.body.raw_data), 3)
         for i, block in enumerate(self.snippet_1.body.raw_data):
-            compare_to = COMPLEX_ORIGINAL_BODY_VALUE[i]
+            compare_to = ORIGINAL_BODY_VALUE[i]
             self.assertEqual(block["type"], compare_to["type"])
             self.assertEqual(block["value"], compare_to["value"])
 
@@ -45,14 +47,16 @@ class TestMigrationOutcomes(TestCase):
         test_snippet = self.snippet_2
 
         self.assertEqual(test_page.title, "Modified Test Page Deux")
+        self.assertEqual(len(test_page.body.raw_data), 3)
         for i, block in enumerate(test_page.body.raw_data):
-            compare_to = COMPLEX_MODIFIED_BODY_VALUE[i]
+            compare_to = MODIFIED_BODY_VALUE[i]
             self.assertEqual(block["type"], compare_to["type"])
             self.assertEqual(block["value"], compare_to["value"])
 
         self.assertEqual(test_snippet.title, "Modified Test Snippet Deux")
+        self.assertEqual(len(test_snippet.body.raw_data), 3)
         for i, block in enumerate(test_snippet.body.raw_data):
-            compare_to = COMPLEX_MODIFIED_BODY_VALUE[i]
+            compare_to = MODIFIED_BODY_VALUE[i]
             self.assertEqual(block["type"], compare_to["type"])
             self.assertEqual(block["value"], compare_to["value"])
 
@@ -68,14 +72,15 @@ class TestMigrationOutcomes(TestCase):
         test_snippet = self.snippet_3
 
         self.assertEqual(test_page.title, "Bulk Modified Test Page Tres")
+        self.assertEqual(len(test_page.body.raw_data), 3)
         for i, block in enumerate(test_page.body.raw_data):
-            compare_to = COMPLEX_ORIGINAL_BODY_VALUE[i]
+            compare_to = ORIGINAL_BODY_VALUE[i]
             self.assertEqual(block["type"], compare_to["type"])
             self.assertEqual(block["value"], compare_to["value"])
 
         self.assertEqual(test_snippet.title, "Bulk Modified Test Snippet Tres")
         for i, block in enumerate(test_snippet.body.raw_data):
-            compare_to = COMPLEX_ORIGINAL_BODY_VALUE[i]
+            compare_to = ORIGINAL_BODY_VALUE[i]
             self.assertEqual(block["type"], compare_to["type"])
             self.assertEqual(block["value"], compare_to["value"])
 
@@ -94,13 +99,15 @@ class TestMigrationOutcomes(TestCase):
         test_snippet = self.snippet_4
 
         self.assertEqual(test_page.title, "Bulk Modified Test Page Cuatro")
+        self.assertEqual(len(test_page.body.raw_data), 3)
         for i, block in enumerate(test_page.body.raw_data):
-            compare_to = COMPLEX_MODIFIED_BODY_VALUE[i]
+            compare_to = MODIFIED_BODY_VALUE[i]
             self.assertEqual(block["type"], compare_to["type"])
             self.assertEqual(block["value"], compare_to["value"])
 
         self.assertEqual(test_snippet.title, "Bulk Modified Test Snippet Cuatro")
+        self.assertEqual(len(test_snippet.body.raw_data), 3)
         for i, block in enumerate(test_snippet.body.raw_data):
-            compare_to = COMPLEX_MODIFIED_BODY_VALUE[i]
+            compare_to = MODIFIED_BODY_VALUE[i]
             self.assertEqual(block["type"], compare_to["type"])
             self.assertEqual(block["value"], compare_to["value"])

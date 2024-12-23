@@ -2,12 +2,7 @@ from typing import Any, Sequence
 
 from django.db import migrations
 
-from tests.testapp.constants import (
-    COMPLEX_MODIFIED_BODY_VALUE,
-    COMPLEX_ORIGINAL_BODY_VALUE,
-    SIMPLE_MODIFIED_BODY_VALUE,
-    SIMPLE_ORIGINAL_BODY_VALUE,
-)
+from tests.testapp.constants import MODIFIED_BODY_VALUE, ORIGINAL_BODY_VALUE
 
 
 """
@@ -26,8 +21,7 @@ retained as expected.
 def set_body_values(
     apps,
     schema_editor,
-    simple_value: Sequence[tuple[str, Any]],
-    complex_value: Sequence[dict[str, Any]],
+    new_value: Sequence[dict[str, Any]],
 ):
     TestPage = apps.get_model("testapp", "TestPage")
     TestSnippet = apps.get_model("testapp", "TestSnippet")
@@ -35,26 +29,22 @@ def set_body_values(
     # Modify "Test Page Cuatro"
     # Uses `simple_value` to show that the new field handles the simple 'list of tuples' format correctly
     page = TestPage.objects.last()
-    page.body = simple_value
+    page.body = new_value
     TestPage.objects.bulk_update([page], ["body"])
 
     # Modify "Test Snippet Cuatro"
     # Uses `complex_value` to show that the new field handles the more complicated 'list of dicts' format correctly
     snippet = TestSnippet.objects.last()
-    snippet.body = complex_value
+    snippet.body = new_value
     TestSnippet.objects.bulk_update([snippet], ["body"])
 
 
 def migrate_forwards(apps, schema_editor):
-    set_body_values(
-        apps, schema_editor, SIMPLE_MODIFIED_BODY_VALUE, COMPLEX_MODIFIED_BODY_VALUE
-    )
+    set_body_values(apps, schema_editor, MODIFIED_BODY_VALUE)
 
 
 def migrate_backwards(apps, schema_editor):
-    set_body_values(
-        apps, schema_editor, SIMPLE_ORIGINAL_BODY_VALUE, COMPLEX_ORIGINAL_BODY_VALUE
-    )
+    set_body_values(apps, schema_editor, ORIGINAL_BODY_VALUE)
 
 
 class Migration(migrations.Migration):

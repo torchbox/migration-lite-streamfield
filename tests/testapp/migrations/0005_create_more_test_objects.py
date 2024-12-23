@@ -1,9 +1,6 @@
 from django.db import migrations
 
-from tests.testapp.constants import (
-    COMPLEX_ORIGINAL_BODY_VALUE,
-    SIMPLE_ORIGINAL_BODY_VALUE,
-)
+from tests.testapp.constants import ORIGINAL_BODY_VALUE
 
 
 """
@@ -36,7 +33,7 @@ def migrate_forwards(apps, schema_editor):
         draft_title="Test Page Tres",
         slug="test-page-3",
         content_type=content_type,
-        body=SIMPLE_ORIGINAL_BODY_VALUE,
+        body=ORIGINAL_BODY_VALUE,
         depth=3,
         locale_id=1,
         path="000100010003",
@@ -49,7 +46,7 @@ def migrate_forwards(apps, schema_editor):
         draft_title="Test Page Cuatro",
         slug="test-page-4",
         content_type=content_type,
-        body=COMPLEX_ORIGINAL_BODY_VALUE,
+        body=ORIGINAL_BODY_VALUE,
         depth=3,
         locale_id=1,
         path="000100010004",
@@ -59,13 +56,9 @@ def migrate_forwards(apps, schema_editor):
     )
     Page.objects.filter(depth=2).update(numchild=4)
 
-    # Add snippetS
-    TestSnippet.objects.create(
-        title="Test Snippet Tres", body=SIMPLE_ORIGINAL_BODY_VALUE
-    )
-    TestSnippet.objects.create(
-        title="Test Snippet Cuatro", body=COMPLEX_ORIGINAL_BODY_VALUE
-    )
+    # Add snippets
+    TestSnippet.objects.create(title="Test Snippet Tres", body=ORIGINAL_BODY_VALUE)
+    TestSnippet.objects.create(title="Test Snippet Cuatro", body=ORIGINAL_BODY_VALUE)
 
 
 def migrate_backwards(apps, schema_editor):
